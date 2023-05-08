@@ -96,9 +96,7 @@ function activity(title, t1, t2, t3, t4, t5, texts) {
               >
                 <img
                   src="{{it.__logoUrl}}"
-                  height="96"
-                  width="96"
-                  style="border-radius: 50%"
+                  width="{{it.__logoWidth}}"
                 />
               </td>
             </tr>
@@ -113,7 +111,7 @@ function activity(title, t1, t2, t3, t4, t5, texts) {
                     font-family: 'Inter', Verdana, sans-serif;
                     font-size: 18px;
                     line-height: 22.4px;
-                    font-weight: 600;
+                    font-weight: 400;
                     color: #5b6577;
                   "
                 >

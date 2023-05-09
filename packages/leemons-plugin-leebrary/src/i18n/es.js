@@ -304,5 +304,8 @@ module.exports = {
   },
   uploadFileModal: {
     title: 'Subiendo archivo',
+    fileOf: 'Subiendo archivo {currentFile} de {totalFiles} - {currentFilePercentageCompleted}%',
+    init: 'Iniciando subida',
+    unzip: 'Preparando zip para la subida',
   },
 };

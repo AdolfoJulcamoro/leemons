@@ -13,7 +13,7 @@ import {
 import { useHistory, useParams } from 'react-router-dom';
 import { useForm, Controller } from 'react-hook-form';
 import { CloudUploadIcon } from '@bubbles-ui/icons/outline';
-import * as zip from '@zip.js/zip.js';
+import * as JSZip from 'jszip';
 import useTranslateLoader from '@multilanguage/useTranslateLoader';
 import { useStore, unflatten } from '@common';
 import { addErrorAlert, addSuccessAlert } from '@layout/alert';
@@ -23,15 +23,6 @@ import { savePackageRequest, getPackageRequest } from '@scorm/request';
 import { xml2json } from '@scorm/lib/utilities';
 import { SetupContent, DocumentIcon } from '@scorm/components/icons';
 import { PageContent } from './components/PageContent/PageContent';
-
-const ZipReader = (() => ({
-  getEntries(file, options) {
-    return new zip.ZipReader(new zip.BlobReader(file)).getEntries(options);
-  },
-  async getURL(entry, options) {
-    return URL.createObjectURL(await entry.getData(new zip.BlobWriter(), options));
-  },
-}))();
 
 export default function Index() {
   const [t, , , tLoading] = useTranslateLoader(prefixPN('scormSetup'));
@@ -162,22 +153,27 @@ export default function Index() {
     return entryContent;
   }
 
-  async function loadFiles(file, filenameEncoding) {
+  async function loadFiles(file) {
     try {
-      const entries = await ZipReader.getEntries(file, { filenameEncoding });
-      if (isArray(entries) && entries.length) {
-        const manifest = entries.find((entry) => entry.filename === 'imsmanifest.xml');
+      const zip = new JSZip();
+      const files = await zip.loadAsync(file);
 
-        if (!manifest) {
+      if (files?.files) {
+        let manifestFile = null;
+
+        files.forEach(async (relativePath, zipFile) => {
+          if (relativePath === 'imsmanifest.xml') {
+            manifestFile = zipFile;
+          }
+        });
+
+        if (!manifestFile) {
           throw new Error(null);
         }
 
-        const manifestDoc = await downloadEntry(manifest);
+        const manifest = await manifestFile.async('string');
 
-        if (!manifestDoc || !manifestDoc?.evaluate) {
-          throw new Error(null);
-        }
-
+        const manifestDoc = new window.DOMParser().parseFromString(manifest, 'text/xml');
         const manifestObj = xml2json(manifestDoc);
         const scormData = manifestObj?.manifest;
 

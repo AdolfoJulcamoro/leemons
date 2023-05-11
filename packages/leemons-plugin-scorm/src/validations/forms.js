@@ -11,7 +11,7 @@ const {
 const savePackageSchema = {
   type: 'object',
   properties: {
-    id: stringSchema,
+    id: stringSchemaNullable,
     name: stringSchema,
     tagline: stringSchemaNullable,
     description: textSchemaNullable,
@@ -24,19 +24,19 @@ const savePackageSchema = {
       type: ['object', 'string'],
       nullable: true,
     },
-    featuredImage: {
-      type: ['object', 'string'],
-      nullable: true,
+    file: {
+      type: ['string'],
+      nullable: false,
     },
-    packageFile: {
-      type: ['object', 'string'],
-      nullable: true,
+    version: {
+      type: ['string'],
+      nullable: false,
     },
-    introductoryText: { type: 'string', nullable: true },
-    content: {
-      type: 'string',
-      nullable: true,
+    launchUrl: {
+      type: ['string'],
+      nullable: false,
     },
+    gradable: booleanSchema,
     program: stringSchemaNullable,
     subjects: {
       type: 'array',
@@ -45,7 +45,7 @@ const savePackageSchema = {
     },
     published: booleanSchema,
   },
-  required: ['name'],
+  required: ['name', 'file', 'version', 'launchUrl'],
   additionalProperties: false,
 };
 

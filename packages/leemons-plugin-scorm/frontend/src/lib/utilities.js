@@ -1,5 +1,7 @@
 /* eslint-disable no-restricted-syntax */
 /* eslint-disable camelcase */
+import { XMLParser } from 'fast-xml-parser';
+
 export const SECONDS_PER_SECOND = 1.0;
 export const SECONDS_PER_MINUTE = 60;
 export const SECONDS_PER_HOUR = 60 * SECONDS_PER_MINUTE;
@@ -231,38 +233,75 @@ export function unflatten(data) {
   return result[''] || result;
 }
 
-/*	This work is licensed under Creative Commons GNU LGPL License.
+export function xml2json(
+  xmlString,
+  alwaysArray = ['manifest.organizations.organization', 'manifest.resources.resource']
+) {
+  const result = new XMLParser({
+    ignoreAttributes: false,
+    isArray: (name, jpath) => alwaysArray.indexOf(jpath) !== -1,
+  }).parse(xmlString);
+  return result;
+}
 
-	License: http://creativecommons.org/licenses/LGPL/2.1/
-   Version: 0.9
-	Author:  Stefan Goessner/2006
-	Web:     http://goessner.net/
-*/
-export function xml2json(xml) {
-  let obj = {};
-  try {
-    if (xml.children.length > 0) {
-      for (let i = 0; i < xml.children.length; i++) {
-        const item = xml.children.item(i);
-        const { nodeName } = item;
+export function getVersionFromMetadata(schemaVersion = '', values = []) {
+  if (schemaVersion.indexOf('1.2') > -1) {
+    return values.find((item) => item.value === 'scorm12');
+  }
 
-        if (typeof obj[nodeName] === 'undefined') {
-          obj[nodeName] = xml2json(item);
-        } else {
-          if (typeof obj[nodeName].push === 'undefined') {
-            const old = obj[nodeName];
+  if (schemaVersion.indexOf('2004') > -1 || schemaVersion.indexOf('CAM') > -1) {
+    return values.find((item) => item.value === 'scorm2004');
+  }
 
-            obj[nodeName] = [];
-            obj[nodeName].push(old);
-          }
-          obj[nodeName].push(xml2json(item));
+  return values.find((item) => item.value === 'aicc');
+}
+
+export function getDefaultOrganization(manifestObj) {
+  const { organizations } = manifestObj;
+  if (organizations?.organization) {
+    const defaultOrg = organizations['@_default'];
+    if (defaultOrg) {
+      const organization = organizations.organization.find(
+        (item) => item['@_identifier'] === defaultOrg
+      );
+      if (organization) {
+        return organization;
+      }
+
+      return organizations.organization[0];
+    }
+  }
+  return null;
+}
+
+export function getLaunchURL(manifestObj) {
+  let launchUrl = null;
+
+  const { resources, organizations } = manifestObj;
+
+  if (organizations?.organization) {
+    const organization = getDefaultOrganization(manifestObj);
+    if (organization) {
+      let idRef = null;
+      idRef = organization.item['@_identifierref'];
+
+      if (idRef) {
+        const resource = resources.resource.find((item) => item['@_identifier'] === idRef);
+        if (resource) {
+          launchUrl = resource['@_href'];
         }
       }
-    } else {
-      obj = xml.textContent;
     }
-  } catch (e) {
-    console.log(e.message);
   }
-  return obj;
+
+  if (!launchUrl && Array.isArray(resources?.resource)) {
+    const resource = resources.resource.find(
+      (item) =>
+        item['@_type'] === 'webcontent' &&
+        String(item['@_href']).split('.').reverse()[0].toLowerCase() === 'html'
+    );
+    launchUrl = resource['@_href'];
+  }
+
+  return launchUrl;
 }

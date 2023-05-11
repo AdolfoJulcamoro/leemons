@@ -46,7 +46,7 @@ module.exports = {
   scormCard: {
     view: 'Vista previa',
     edit: 'Editar',
-    document: 'Documento',
+    document: 'Contenido SCORM',
     assign: 'Asignar',
     delete: 'Borrar',
     deleted: 'Borrado',
@@ -63,13 +63,13 @@ module.exports = {
     shared: 'Compartido',
   },
   scormSetup: {
-    title: 'Añadir nuevo paquete SCORM',
+    title: 'Añadir nuevo contenido SCORM',
     description:
-      'Para importar un paquete SCORM, debe estar comprimido (.zip) y debe tener un archivo <strong>imsmanifest.xml</strong> que describa el curso y su contenido.',
+      'Para importar un contenido SCORM, debe estar comprimido (.zip) y debe tener un archivo <strong>imsmanifest.xml</strong> que describa el curso y su contenido.',
     addFile: 'Subir archivo zip',
     dropFile: 'Click para buscar un archivo o arrastrar aquí desde el ordenador',
     fileFormatError:
-      "Paquete SCORM no válido. Debe existir el archivo 'imsmanifest.xml' en la raíz del ZIP",
+      "Archivo SCORM no válido. Debe existir el archivo 'imsmanifest.xml' en la raíz del ZIP",
     pageTitle: 'Configuración General',
     saveDraft: 'Guardar borrador',
     publish: 'Publicar',
@@ -82,6 +82,9 @@ module.exports = {
     publishAndShare: 'Publicar y compartir',
     publishAndAssign: 'Publicar y asignar como tarea',
     config: 'Configuración general',
+    schemaVersion: 'Versión de SCORM',
+    schemaVersionHelp:
+      'Se detectará automáticamente al seleccionar el archivo ZIP, pero puedes indicarlo manualmente en caso de algún error.',
   },
   scormAssign: {
     assign: 'Asignar como tarea',

@@ -31,26 +31,14 @@ module.exports = [
       },
     },
   }),
-  // Document
+
+  // Packages
   {
     path: '/package',
     method: 'POST',
     handler: 'package.savePackage',
     authenticated: true,
     allowedPermissions: getPermissions(permissions.creator, ['create', 'update']),
-  },
-  {
-    path: '/package/:id',
-    method: 'GET',
-    handler: 'package.getPackage',
-    authenticated: true,
-  },
-  {
-    path: '/package/:id',
-    method: 'DELETE',
-    handler: 'package.deletePackage',
-    authenticated: true,
-    allowedPermissions: getPermissions(permissions.creator, ['delete']),
   },
   {
     path: '/package/duplicate',
@@ -71,5 +59,23 @@ module.exports = [
     method: 'POST',
     handler: 'package.sharePackage',
     authenticated: true,
+  },
+  {
+    path: '/package/supported-versions',
+    method: 'GET',
+    handler: 'package.getSupportedVersions',
+  },
+  {
+    path: '/package/:id',
+    method: 'GET',
+    handler: 'package.getPackage',
+    authenticated: true,
+  },
+  {
+    path: '/package/:id',
+    method: 'DELETE',
+    handler: 'package.deletePackage',
+    authenticated: true,
+    allowedPermissions: getPermissions(permissions.creator, ['delete']),
   },
 ];

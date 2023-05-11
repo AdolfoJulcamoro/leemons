@@ -1,47 +1,18 @@
-const { cloneDeep, isString } = require('lodash');
+import { isString } from 'lodash';
 
 async function savePackage(packageData) {
-  const { file, ...data } = packageData;
-  const body = cloneDeep(data);
-  const form = new FormData();
+  const { file, ...body } = packageData;
 
-  form.append('files', file, file.name);
-
-  if (
-    (data.featuredImage && !isString(data.featuredImage)) ||
-    (data.cover && !isString(data.cover))
-  ) {
-    const { cover, featuredImage, ...asset } = body;
-    if (data.cover) {
-      if (data.cover.cover) {
-        asset.cover = data.cover.cover?.id;
-      } else if (data.cover.id) {
-        asset.cover = data.cover.id;
-      } else {
-        form.append('cover', data.cover, data.cover.name);
-      }
-    }
-    if (data.featuredImage) {
-      if (data.featuredImage.cover) {
-        asset.featuredImage = data.featuredImage.cover?.id;
-      } else if (data.featuredImage.id) {
-        asset.featuredImage = data.featuredImage.id;
-      } else {
-        form.append('featuredImage', data.featuredImage, data.featuredImage.name);
-      }
-    }
-    form.append('data', JSON.stringify(asset));
-  } else {
-    form.append('data', JSON.stringify(body));
+  if (isString(file)) {
+    body.file = file;
+  } else if (file?.id) {
+    body.file = file.id;
   }
 
   return leemons.api('scorm/package', {
     allAgents: true,
     method: 'POST',
-    headers: {
-      'content-type': 'none',
-    },
-    body: form,
+    body,
   });
 }
 
@@ -92,4 +63,19 @@ async function sharePackage(id, { canAccess }) {
   });
 }
 
-export { savePackage, getPackage, deletePackage, duplicatePackage, assignPackage, sharePackage };
+async function getSupportedVersions() {
+  return leemons.api('scorm/package/supported-versions', {
+    allAgents: true,
+    method: 'GET',
+  });
+}
+
+export {
+  savePackage,
+  getPackage,
+  deletePackage,
+  duplicatePackage,
+  assignPackage,
+  sharePackage,
+  getSupportedVersions,
+};

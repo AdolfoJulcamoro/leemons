@@ -1,5 +1,5 @@
-import React, { useEffect } from 'react';
-import { isArray, isEmpty } from 'lodash';
+import React, { useEffect, useState } from 'react';
+import { isEmpty } from 'lodash';
 import {
   Box,
   PageHeader,
@@ -9,18 +9,25 @@ import {
   ContextContainer,
   FileUpload,
   Paragraph,
+  Select,
 } from '@bubbles-ui/components';
+import JSZip from 'jszip';
 import { useHistory, useParams } from 'react-router-dom';
 import { useForm, Controller } from 'react-hook-form';
 import { CloudUploadIcon } from '@bubbles-ui/icons/outline';
-import * as JSZip from 'jszip';
 import useTranslateLoader from '@multilanguage/useTranslateLoader';
 import { useStore, unflatten } from '@common';
 import { addErrorAlert, addSuccessAlert } from '@layout/alert';
-import { AssetFormInput } from '@leebrary/components';
+import { AssetFormInput, UploadingFileModal } from '@leebrary/components';
+import uploadFileAsMultipart from '@leebrary/helpers/uploadFileAsMultipart';
 import { prefixPN } from '@scorm/helpers';
-import { savePackageRequest, getPackageRequest } from '@scorm/request';
-import { xml2json } from '@scorm/lib/utilities';
+import { savePackageRequest, getPackageRequest, getSupportedVersionsRequest } from '@scorm/request';
+import {
+  xml2json,
+  getVersionFromMetadata,
+  getLaunchURL,
+  getDefaultOrganization,
+} from '@scorm/lib/utilities';
 import { SetupContent, DocumentIcon } from '@scorm/components/icons';
 import { PageContent } from './components/PageContent/PageContent';
 
@@ -32,10 +39,12 @@ export default function Index() {
   // SETTINGS
 
   const debounce = useDebouncedCallback(1000);
+  const [uploadingFileInfo, setUploadingFileInfo] = useState(null);
   const [store, render] = useStore({
     loading: true,
     isNew: false,
     package: {},
+    supportedVersions: [],
     preparedAsset: {},
     openShareDrawer: false,
   });
@@ -69,13 +78,16 @@ export default function Index() {
       if (!store.isNew) {
         const {
           // eslint-disable-next-line camelcase
-          scorm: { deleted, deleted_at, created_at, updated_at, ...props },
+          scorm: { deleted, deleted_at, created_at, updated_at, asset, ...props },
         } = await getPackageRequest(params.id);
         // eslint-disable-next-line react/prop-types
         store.titleValue = props.name;
         store.package = { ...props };
-        form.reset(props);
+        form.reset({ ...asset, ...props });
       }
+
+      const { versions: supportedVersions } = await getSupportedVersionsRequest();
+      store.supportedVersions = supportedVersions;
       store.idLoaded = params.id;
       store.loading = false;
       render();
@@ -91,29 +103,63 @@ export default function Index() {
   // ----------------------------------------------------------------------------
   // METHODS
 
+  async function savePackage(published) {
+    const fileId = await uploadFileAsMultipart(formValues.file, {
+      onProgress: (info) => {
+        setUploadingFileInfo(info);
+      },
+    });
+
+    setUploadingFileInfo(null);
+
+    const dataToSave = {
+      ...formValues,
+      id: store.isNew ? null : store.idLoaded,
+      file: fileId,
+      launchUrl: store.package.launchUrl,
+      published,
+    };
+
+    const {
+      package: { id },
+    } = await savePackageRequest(dataToSave);
+
+    store.package.id = id;
+    store.idLoaded = id;
+    store.isNew = false;
+
+    if (fileId !== formValues.file.id) {
+      form.setValue('file', {
+        id: fileId,
+        name: formValues.file.name,
+        type: formValues.file.type,
+      });
+    }
+  }
+
   async function saveAsDraft() {
     try {
       store.saving = 'duplicate';
+      const updateRoute = store.isNew;
       render();
-      await savePackageRequest({ ...formValues, published: false });
+      await savePackage(false);
       addSuccessAlert(t('savedAsDraft'));
-      // history.push('/private/scorm/?fromDraft=1');
+      if (updateRoute) {
+        history.push(`/private/scorm/${store.package.id}`);
+      }
     } catch (error) {
       addErrorAlert(error);
+    } finally {
+      store.saving = null;
+      render();
     }
-    store.saving = null;
-    render();
   }
 
   async function saveAsPublish() {
     try {
       store.saving = 'edit';
       render();
-      const { package: packageRequest } = await savePackageRequest({
-        ...formValues,
-        published: true,
-      });
-      store.package = packageRequest;
+      await savePackage(true);
       addSuccessAlert(t('published'));
     } catch (error) {
       addErrorAlert(error);
@@ -133,74 +179,66 @@ export default function Index() {
     history.push(`/private/scorm/assign/${store.package.assignable}`);
   }
 
-  async function downloadEntry(entry) {
-    const { signal } = new AbortController();
-    let entryContent = null;
-    try {
-      const blobURL = await ZipReader.getURL(entry, {
-        signal,
-      });
-
-      if (blobURL) {
-        const response = await fetch(blobURL);
-        entryContent = new window.DOMParser().parseFromString(await response.text(), 'text/xml');
-      }
-    } catch (error) {
-      if (!signal.reason || signal.reason.code !== error.code) {
-        throw error;
-      }
-    }
-    return entryContent;
-  }
-
   async function loadFiles(file) {
-    try {
-      const zip = new JSZip();
-      const files = await zip.loadAsync(file);
+    if (file instanceof File) {
+      try {
+        const zip = new JSZip();
+        const files = (await zip.loadAsync(file)).folder('');
 
-      if (files?.files) {
-        let manifestFile = null;
+        if (files?.files) {
+          let manifestFile = null;
 
-        files.forEach(async (relativePath, zipFile) => {
-          if (relativePath === 'imsmanifest.xml') {
-            manifestFile = zipFile;
+          files.forEach(async (relativePath, zipFile) => {
+            if (relativePath === 'imsmanifest.xml') {
+              manifestFile = zipFile;
+            }
+          });
+
+          if (!manifestFile) {
+            throw new Error(null);
           }
-        });
 
-        if (!manifestFile) {
-          throw new Error(null);
-        }
+          const manifest = await manifestFile.async('string');
+          const manifestObj = xml2json(manifest);
+          const scormData = manifestObj?.manifest;
 
-        const manifest = await manifestFile.async('string');
+          if (!scormData) {
+            throw new Error(null);
+          }
 
-        const manifestDoc = new window.DOMParser().parseFromString(manifest, 'text/xml');
-        const manifestObj = xml2json(manifestDoc);
-        const scormData = manifestObj?.manifest;
+          const organization = getDefaultOrganization(scormData);
+          const launchUrl = getLaunchURL(scormData);
 
-        if (!scormData) {
-          throw new Error(null);
-        }
+          store.package = { ...store.package, launchUrl };
 
-        if (scormData.organizations?.organization?.title) {
-          form.setValue('name', scormData.organizations.organization.title);
-        }
+          if (organization?.title && isEmpty(formValues.name)) {
+            form.setValue('name', organization.title);
+          }
 
-        /*
-        if (scormData.metadata) {
+          if (scormData.metadata) {
+            const versionValue = getVersionFromMetadata(
+              String(scormData.metadata.schemaversion),
+              store.supportedVersions
+            );
+            if (versionValue) {
+              form.setValue('version', versionValue.value);
+            }
+            /*
           const currentTags = isArray(formValues.tags) ? formValues.tags : [];
           form.setValue('tags', [
             ...currentTags,
             scormData.metadata.schema,
             `Version ${scormData.metadata.schemaversion}`,
           ]);
+          */
+          }
         }
-        */
+      } catch (e) {
+        form.setValue('file', null);
+        addErrorAlert({
+          message: t('fileFormatError'),
+        });
       }
-    } catch (e) {
-      form.setValue('file', null);
-      addErrorAlert({
-        message: t('fileFormatError'),
-      });
     }
   }
 
@@ -233,8 +271,8 @@ export default function Index() {
     alwaysOpen: true,
     fileToRight: true,
     colorToRight: true,
-    program: { show: true, required: true },
-    subjects: { show: true, required: true, showLevel: true, maxOne: false },
+    program: { show: true, required: false },
+    subjects: { show: true, required: false, showLevel: true, maxOne: false },
   };
 
   return (
@@ -307,11 +345,28 @@ export default function Index() {
                 previewVariant="document"
                 advancedConfig={advancedConfig}
                 tagsPluginName="scorm"
-              />
+              >
+                <Box>
+                  <Controller
+                    control={form.control}
+                    name="version"
+                    shouldUnregister
+                    render={({ field }) => (
+                      <Select
+                        {...field}
+                        label={t('schemaVersion')}
+                        help={t('schemaVersionHelp')}
+                        data={store.supportedVersions}
+                      />
+                    )}
+                  />
+                </Box>
+              </AssetFormInput>
             </ContextContainer>
           </ContextContainer>
         </PageContent>
       </Stack>
+      <UploadingFileModal opened={uploadingFileInfo !== null} info={uploadingFileInfo} />
     </Box>
   );
 }

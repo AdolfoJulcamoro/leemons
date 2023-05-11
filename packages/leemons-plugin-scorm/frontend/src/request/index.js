@@ -5,4 +5,5 @@ export {
   deletePackage as deletePackageRequest,
   assignPackage as assignPackageRequest,
   duplicatePackage as duplicatePackageRequest,
+  getSupportedVersions as getSupportedVersionsRequest,
 } from './packages';

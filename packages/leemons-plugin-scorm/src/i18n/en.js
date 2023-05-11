@@ -80,6 +80,9 @@ module.exports = {
     publishAndShare: 'Publish and share',
     publishAndAssign: 'Publish and assign',
     config: 'General configuration',
+    schemaVersion: 'SCORM version',
+    schemaVersionHelp:
+      'It will be detected automatically when selecting the ZIP file, but you can overwrite it manually.',
   },
   scormAssign: {
     assign: 'Assign as task',

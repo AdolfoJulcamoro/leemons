@@ -1,10 +1,13 @@
+/* eslint-disable no-unused-expressions */
+/* eslint-disable camelcase */
+/* eslint-disable max-classes-per-file */
 /* eslint-disable no-useless-constructor */
-import * as Scorm12CMI from "./scorm12_cmi";
-import { BaseCMI, checkValidFormat, CMIArray, CMIScore } from "./common";
-import APIConstants from "../constants/api_constants";
-import Regex from "../constants/regex";
-import ErrorCodes from "../constants/error_codes";
-import { AICCValidationError } from "../exceptions";
+import * as Scorm12CMI from './scorm12_cmi';
+import { BaseCMI, checkValidFormat, CMIArray, CMIScore } from './common';
+import APIConstants from '../constants/api_constants';
+import Regex from '../constants/regex';
+import ErrorCodes from '../constants/error_codes';
+import { AICCValidationError } from '../exceptions';
 
 const aicc_constants = APIConstants.aicc;
 const aicc_regex = Regex.aicc;
@@ -35,73 +38,30 @@ function checkAICCValidFormat(value, regexPattern, allowEmptyString) {
 }
 
 /**
- * CMI Class for AICC
+ * Class representing AICC's cmi.evaluation.comments object
  */
-export class CMI extends Scorm12CMI.CMI {
+class CMIEvaluationComments extends CMIArray {
   /**
-   * Constructor for AICC CMI object
-   * @param {boolean} initialized
+   * Constructor for AICC Evaluation Comments object
    */
-  constructor(initialized) {
-    super(aicc_constants.cmi_children);
-
-    if (initialized) this.initialize();
-
-    this.student_preference = new AICCStudentPreferences();
-    this.student_data = new AICCCMIStudentData();
-    this.student_demographics = new CMIStudentDemographics();
-    this.evaluation = new CMIEvaluation();
-    this.paths = new CMIPaths();
+  constructor() {
+    super({
+      children: aicc_constants.comments_children,
+      errorCode: aicc_error_codes.INVALID_SET_VALUE,
+      errorClass: AICCValidationError,
+    });
   }
+}
 
+/**
+ * Class representing the AICC cmi.student_data.tries object
+ */
+export class CMITries extends CMIArray {
   /**
-   * Called when the API has been initialized after the CMI has been created
+   * Constructor for inline Tries Array class
    */
-  initialize() {
-    super.initialize();
-    this.student_preference?.initialize();
-    this.student_data?.initialize();
-    this.student_demographics?.initialize();
-    this.evaluation?.initialize();
-    this.paths?.initialize();
-  }
-
-  /**
-   * toJSON for cmi
-   *
-   * @return {
-   *    {
-   *      suspend_data,
-   *      launch_data,
-   *      comments,
-   *      comments_from_lms,
-   *      core: CMICore,
-   *      objectives: CMIObjectives,
-   *      student_data: CMIStudentData,
-   *      student_preference: CMIStudentPreference,
-   *      interactions: CMIInteractions,
-   *      paths: CMIPaths
-   *    }
-   *  }
-   */
-  toJSON() {
-    this.jsonString = true;
-    const result = {
-      suspend_data: this.suspend_data,
-      launch_data: this.launch_data,
-      comments: this.comments,
-      comments_from_lms: this.comments_from_lms,
-      core: this.core,
-      objectives: this.objectives,
-      student_data: this.student_data,
-      student_preference: this.student_preference,
-      student_demographics: this.student_demographics,
-      interactions: this.interactions,
-      evaluation: this.evaluation,
-      paths: this.paths,
-    };
-    delete this.jsonString;
-    return result;
+  constructor() {
+    super({ children: aicc_constants.tries_children });
   }
 }
 
@@ -141,22 +101,6 @@ class CMIEvaluation extends BaseCMI {
 }
 
 /**
- * Class representing AICC's cmi.evaluation.comments object
- */
-class CMIEvaluationComments extends CMIArray {
-  /**
-   * Constructor for AICC Evaluation Comments object
-   */
-  constructor() {
-    super({
-      children: aicc_constants.comments_children,
-      errorCode: aicc_error_codes.INVALID_SET_VALUE,
-      errorClass: AICCValidationError,
-    });
-  }
-}
-
-/**
  * StudentPreferences class for AICC
  */
 class AICCStudentPreferences extends Scorm12CMI.CMIStudentPreference {
@@ -169,7 +113,7 @@ class AICCStudentPreferences extends Scorm12CMI.CMIStudentPreference {
     this.windows = new CMIArray({
       errorCode: aicc_error_codes.INVALID_SET_VALUE,
       errorClass: AICCValidationError,
-      children: "",
+      children: '',
     });
   }
 
@@ -181,11 +125,15 @@ class AICCStudentPreferences extends Scorm12CMI.CMIStudentPreference {
     this.windows?.initialize();
   }
 
-  #lesson_type = "";
-  #text_color = "";
-  #text_location = "";
-  #text_size = "";
-  #video = "";
+  #lesson_type = '';
+
+  #text_color = '';
+
+  #text_location = '';
+
+  #text_size = '';
+
+  #video = '';
 
   /**
    * Getter for #lesson_type
@@ -329,7 +277,7 @@ class AICCCMIStudentData extends Scorm12CMI.CMIStudentData {
     this.tries?.initialize();
   }
 
-  #tries_during_lesson = "";
+  #tries_during_lesson = '';
 
   /**
    * Getter for tries_during_lesson
@@ -345,9 +293,7 @@ class AICCCMIStudentData extends Scorm12CMI.CMIStudentData {
    * @param {string} tries_during_lesson
    */
   set tries_during_lesson(tries_during_lesson) {
-    !this.initialized
-      ? (this.#tries_during_lesson = tries_during_lesson)
-      : throwReadOnlyError();
+    !this.initialized ? (this.#tries_during_lesson = tries_during_lesson) : throwReadOnlyError();
   }
 
   /**
@@ -386,19 +332,32 @@ export class CMIStudentDemographics extends BaseCMI {
   }
 
   #_children = aicc_constants.student_demographics_children;
-  #city = "";
-  #class = "";
-  #company = "";
-  #country = "";
-  #experience = "";
-  #familiar_name = "";
-  #instructor_name = "";
-  #title = "";
-  #native_language = "";
-  #state = "";
-  #street_address = "";
-  #telephone = "";
-  #years_experience = "";
+
+  #city = '';
+
+  #class = '';
+
+  #company = '';
+
+  #country = '';
+
+  #experience = '';
+
+  #familiar_name = '';
+
+  #instructor_name = '';
+
+  #title = '';
+
+  #native_language = '';
+
+  #state = '';
+
+  #street_address = '';
+
+  #telephone = '';
+
+  #years_experience = '';
 
   /**
    * Getter for _children
@@ -507,9 +466,7 @@ export class CMIStudentDemographics extends BaseCMI {
    * @param {string} familiar_name
    */
   set familiar_name(familiar_name) {
-    !this.initialized
-      ? (this.#familiar_name = familiar_name)
-      : throwReadOnlyError();
+    !this.initialized ? (this.#familiar_name = familiar_name) : throwReadOnlyError();
   }
 
   /**
@@ -526,9 +483,7 @@ export class CMIStudentDemographics extends BaseCMI {
    * @param {string} instructor_name
    */
   set instructor_name(instructor_name) {
-    !this.initialized
-      ? (this.#instructor_name = instructor_name)
-      : throwReadOnlyError();
+    !this.initialized ? (this.#instructor_name = instructor_name) : throwReadOnlyError();
   }
 
   /**
@@ -562,9 +517,7 @@ export class CMIStudentDemographics extends BaseCMI {
    * @param {string} native_language
    */
   set native_language(native_language) {
-    !this.initialized
-      ? (this.#native_language = native_language)
-      : throwReadOnlyError();
+    !this.initialized ? (this.#native_language = native_language) : throwReadOnlyError();
   }
 
   /**
@@ -598,9 +551,7 @@ export class CMIStudentDemographics extends BaseCMI {
    * @param {string} street_address
    */
   set street_address(street_address) {
-    !this.initialized
-      ? (this.#street_address = street_address)
-      : throwReadOnlyError();
+    !this.initialized ? (this.#street_address = street_address) : throwReadOnlyError();
   }
 
   /**
@@ -634,9 +585,7 @@ export class CMIStudentDemographics extends BaseCMI {
    * @param {string} years_experience
    */
   set years_experience(years_experience) {
-    !this.initialized
-      ? (this.#years_experience = years_experience)
-      : throwReadOnlyError();
+    !this.initialized ? (this.#years_experience = years_experience) : throwReadOnlyError();
   }
 
   /**
@@ -704,12 +653,17 @@ export class CMIPathsObject extends BaseCMI {
     super();
   }
 
-  #location_id = "";
-  #date = "";
-  #time = "";
-  #status = "";
-  #why_left = "";
-  #time_in_element = "";
+  #location_id = '';
+
+  #date = '';
+
+  #time = '';
+
+  #status = '';
+
+  #why_left = '';
+
+  #time_in_element = '';
 
   /**
    * Getter for #location_id
@@ -848,18 +802,6 @@ export class CMIPathsObject extends BaseCMI {
 }
 
 /**
- * Class representing the AICC cmi.student_data.tries object
- */
-export class CMITries extends CMIArray {
-  /**
-   * Constructor for inline Tries Array class
-   */
-  constructor() {
-    super({ children: aicc_constants.tries_children });
-  }
-}
-
-/**
  * Class for AICC Tries
  */
 export class CMITriesObject extends BaseCMI {
@@ -887,8 +829,9 @@ export class CMITriesObject extends BaseCMI {
     this.score?.initialize();
   }
 
-  #status = "";
-  #time = "";
+  #status = '';
+
+  #time = '';
 
   /**
    * Getter for #status
@@ -988,7 +931,7 @@ export class CMIAttemptRecordsObject extends BaseCMI {
     this.score?.initialize();
   }
 
-  #lesson_status = "";
+  #lesson_status = '';
 
   /**
    * Getter for #lesson_status
@@ -1040,9 +983,11 @@ export class CMIEvaluationCommentsObject extends BaseCMI {
     super();
   }
 
-  #content = "";
-  #location = "";
-  #time = "";
+  #content = '';
+
+  #location = '';
+
+  #time = '';
 
   /**
    * Getter for #content
@@ -1114,6 +1059,77 @@ export class CMIEvaluationCommentsObject extends BaseCMI {
       content: this.content,
       location: this.location,
       time: this.time,
+    };
+    delete this.jsonString;
+    return result;
+  }
+}
+
+/**
+ * CMI Class for AICC
+ */
+export class CMI extends Scorm12CMI.CMI {
+  /**
+   * Constructor for AICC CMI object
+   * @param {boolean} initialized
+   */
+  constructor(initialized) {
+    super(aicc_constants.cmi_children);
+
+    if (initialized) this.initialize();
+
+    this.student_preference = new AICCStudentPreferences();
+    this.student_data = new AICCCMIStudentData();
+    this.student_demographics = new CMIStudentDemographics();
+    this.evaluation = new CMIEvaluation();
+    this.paths = new CMIPaths();
+  }
+
+  /**
+   * Called when the API has been initialized after the CMI has been created
+   */
+  initialize() {
+    super.initialize();
+    this.student_preference?.initialize();
+    this.student_data?.initialize();
+    this.student_demographics?.initialize();
+    this.evaluation?.initialize();
+    this.paths?.initialize();
+  }
+
+  /**
+   * toJSON for cmi
+   *
+   * @return {
+   *    {
+   *      suspend_data,
+   *      launch_data,
+   *      comments,
+   *      comments_from_lms,
+   *      core: CMICore,
+   *      objectives: CMIObjectives,
+   *      student_data: CMIStudentData,
+   *      student_preference: CMIStudentPreference,
+   *      interactions: CMIInteractions,
+   *      paths: CMIPaths
+   *    }
+   *  }
+   */
+  toJSON() {
+    this.jsonString = true;
+    const result = {
+      suspend_data: this.suspend_data,
+      launch_data: this.launch_data,
+      comments: this.comments,
+      comments_from_lms: this.comments_from_lms,
+      core: this.core,
+      objectives: this.objectives,
+      student_data: this.student_data,
+      student_preference: this.student_preference,
+      student_demographics: this.student_demographics,
+      interactions: this.interactions,
+      evaluation: this.evaluation,
+      paths: this.paths,
     };
     delete this.jsonString;
     return result;

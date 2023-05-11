@@ -4,6 +4,7 @@
   "main": "index.js",
   "license": "MIT",
   "dependencies": {
-    "mime-types": "^2.1.35"
+    "mime-types": "^2.1.35",
+    "fast-xml-parser": "4.1.3"
   }
 }

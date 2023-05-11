@@ -222,7 +222,9 @@ const LibraryForm = ({
     if (!isEmpty(assetFile)) {
       const isImageType = isImageFile(assetFile);
       setIsImage(isImageType);
-      setValue('name', assetFile.name.match(/(.+?)(\.[^.]+$|$)/)[1]);
+      if (isEmpty(formValues.name)) {
+        setValue('name', assetFile.name.match(/(.+?)(\.[^.]+$|$)/)[1]);
+      }
     }
   }, [assetFile]);
 

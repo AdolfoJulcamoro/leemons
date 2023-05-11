@@ -1,5 +1,3 @@
-/* eslint-disable no-param-reassign */
-
 async function assignPackage({ id, data }, { ctx, userSession, transacting } = {}) {
   const { assignableInstances: assignableInstancesService } =
     leemons.getPlugin('assignables').services;

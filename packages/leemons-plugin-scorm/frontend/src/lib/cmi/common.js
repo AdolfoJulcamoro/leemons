@@ -1,6 +1,9 @@
-import APIConstants from "../constants/api_constants";
-import ErrorCodes from "../constants/error_codes";
-import Regex from "../constants/regex";
+/* eslint-disable no-param-reassign */
+/* eslint-disable camelcase */
+/* eslint-disable max-classes-per-file */
+import APIConstants from '../constants/api_constants';
+import ErrorCodes from '../constants/error_codes';
+import Regex from '../constants/regex';
 
 const scorm12_constants = APIConstants.scorm12;
 const scorm12_regex = Regex.scorm12;
@@ -16,19 +19,13 @@ const scorm12_error_codes = ErrorCodes.scorm12;
  * @param {boolean} allowEmptyString
  * @return {boolean}
  */
-export function checkValidFormat(
-  value,
-  regexPattern,
-  errorCode,
-  errorClass,
-  allowEmptyString
-) {
+export function checkValidFormat(value, regexPattern, errorCode, errorClass, allowEmptyString) {
   const formatRegex = new RegExp(regexPattern);
   const matches = value.match(formatRegex);
-  if (allowEmptyString && value === "") {
+  if (allowEmptyString && value === '') {
     return true;
   }
-  if (value === undefined || !matches || matches[0] === "") {
+  if (value === undefined || !matches || matches[0] === '') {
     throw new errorClass.prototype.constructor(errorCode);
   }
   return true;
@@ -44,14 +41,13 @@ export function checkValidFormat(
  * @return {boolean}
  */
 export function checkValidRange(value, rangePattern, errorCode, errorClass) {
-  const ranges = rangePattern.split("#");
-  value = value * 1.0;
+  const ranges = rangePattern.split('#');
+  value *= 1.0;
   if (value >= ranges[0]) {
-    if (ranges[1] === "*" || value <= ranges[1]) {
+    if (ranges[1] === '*' || value <= ranges[1]) {
       return true;
-    } else {
-      throw new errorClass.prototype.constructor(errorCode);
     }
+    throw new errorClass.prototype.constructor(errorCode);
   } else {
     throw new errorClass.prototype.constructor(errorCode);
   }
@@ -62,7 +58,9 @@ export function checkValidRange(value, rangePattern, errorCode, errorClass) {
  */
 export class BaseCMI {
   jsonString = false;
+
   #initialized = false;
+
   #start_time;
 
   /**
@@ -70,7 +68,7 @@ export class BaseCMI {
    */
   constructor() {
     if (new.target === BaseCMI) {
-      throw new TypeError("Cannot construct BaseCMI instances directly");
+      throw new TypeError('Cannot construct BaseCMI instances directly');
     }
   }
 
@@ -135,26 +133,32 @@ export class CMIScore extends BaseCMI {
 
     this.#_children = score_children || scorm12_constants.score_children;
     this.#_score_range = !score_range ? false : scorm12_regex.score_range;
-    this.#max = max || max === "" ? max : "100";
-    this.#_invalid_error_code =
-      invalidErrorCode || scorm12_error_codes.INVALID_SET_VALUE;
-    this.#_invalid_type_code =
-      invalidTypeCode || scorm12_error_codes.TYPE_MISMATCH;
-    this.#_invalid_range_code =
-      invalidRangeCode || scorm12_error_codes.VALUE_OUT_OF_RANGE;
+    this.#max = max || max === '' ? max : '100';
+    this.#_invalid_error_code = invalidErrorCode || scorm12_error_codes.INVALID_SET_VALUE;
+    this.#_invalid_type_code = invalidTypeCode || scorm12_error_codes.TYPE_MISMATCH;
+    this.#_invalid_range_code = invalidRangeCode || scorm12_error_codes.VALUE_OUT_OF_RANGE;
     this.#_decimal_regex = decimalRegex || scorm12_regex.CMIDecimal;
     this.#_error_class = errorClass;
   }
 
   #_children;
+
   #_score_range;
+
   #_invalid_error_code;
+
   #_invalid_type_code;
+
   #_invalid_range_code;
+
   #_decimal_regex;
+
   #_error_class;
-  #raw = "";
-  #min = "";
+
+  #raw = '';
+
+  #min = '';
+
   #max;
 
   /**
@@ -172,9 +176,7 @@ export class CMIScore extends BaseCMI {
    * @private
    */
   set _children(_children) {
-    throw new this.#_error_class.prototype.constructor(
-      this.#_invalid_error_code
-    );
+    throw new this.#_error_class.prototype.constructor(this.#_invalid_error_code);
   }
 
   /**
@@ -191,19 +193,9 @@ export class CMIScore extends BaseCMI {
    */
   set raw(raw) {
     if (
-      checkValidFormat(
-        raw,
-        this.#_decimal_regex,
-        this.#_invalid_type_code,
-        this.#_error_class
-      ) &&
+      checkValidFormat(raw, this.#_decimal_regex, this.#_invalid_type_code, this.#_error_class) &&
       (!this.#_score_range ||
-        checkValidRange(
-          raw,
-          this.#_score_range,
-          this.#_invalid_range_code,
-          this.#_error_class
-        ))
+        checkValidRange(raw, this.#_score_range, this.#_invalid_range_code, this.#_error_class))
     ) {
       this.#raw = raw;
     }
@@ -223,19 +215,9 @@ export class CMIScore extends BaseCMI {
    */
   set min(min) {
     if (
-      checkValidFormat(
-        min,
-        this.#_decimal_regex,
-        this.#_invalid_type_code,
-        this.#_error_class
-      ) &&
+      checkValidFormat(min, this.#_decimal_regex, this.#_invalid_type_code, this.#_error_class) &&
       (!this.#_score_range ||
-        checkValidRange(
-          min,
-          this.#_score_range,
-          this.#_invalid_range_code,
-          this.#_error_class
-        ))
+        checkValidRange(min, this.#_score_range, this.#_invalid_range_code, this.#_error_class))
     ) {
       this.#min = min;
     }
@@ -255,19 +237,9 @@ export class CMIScore extends BaseCMI {
    */
   set max(max) {
     if (
-      checkValidFormat(
-        max,
-        this.#_decimal_regex,
-        this.#_invalid_type_code,
-        this.#_error_class
-      ) &&
+      checkValidFormat(max, this.#_decimal_regex, this.#_invalid_type_code, this.#_error_class) &&
       (!this.#_score_range ||
-        checkValidRange(
-          max,
-          this.#_score_range,
-          this.#_invalid_range_code,
-          this.#_error_class
-        ))
+        checkValidRange(max, this.#_score_range, this.#_invalid_range_code, this.#_error_class))
     ) {
       this.#max = max;
     }
@@ -308,7 +280,9 @@ export class CMIArray extends BaseCMI {
   }
 
   #errorCode;
+
   #errorClass;
+
   #_children;
 
   /**
@@ -351,7 +325,7 @@ export class CMIArray extends BaseCMI {
     this.jsonString = true;
     const result = {};
     for (let i = 0; i < this.childArray.length; i++) {
-      result[i + ""] = this.childArray[i];
+      result[`${i}`] = this.childArray[i];
     }
     delete this.jsonString;
     return result;

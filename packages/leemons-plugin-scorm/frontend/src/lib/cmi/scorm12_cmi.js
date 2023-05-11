@@ -1,17 +1,14 @@
+/* eslint-disable class-methods-use-this */
+/* eslint-disable no-unused-expressions */
+/* eslint-disable camelcase */
+/* eslint-disable max-classes-per-file */
 /* eslint-disable no-useless-constructor */
-import {
-  BaseCMI,
-  checkValidFormat,
-  checkValidRange,
-  CMIArray,
-  CMIScore,
-} from "./common";
-import APIConstants from "../constants/api_constants";
-import ErrorCodes from "../constants/error_codes";
-import Regex from "../constants/regex";
-import { Scorm12ValidationError } from "../exceptions";
-import * as Utilities from "../utilities";
-import * as Util from "../utilities";
+import { BaseCMI, checkValidFormat, checkValidRange, CMIArray, CMIScore } from './common';
+import APIConstants from '../constants/api_constants';
+import ErrorCodes from '../constants/error_codes';
+import Regex from '../constants/regex';
+import { Scorm12ValidationError } from '../exceptions';
+import * as Utis from '../utilities';
 
 const scorm12_constants = APIConstants.scorm12;
 const scorm12_regex = Regex.scorm12;
@@ -73,199 +70,6 @@ export function check12ValidRange(value, rangePattern, allowEmptyString) {
 }
 
 /**
- * Class representing the cmi object for SCORM 1.2
- */
-export class CMI extends BaseCMI {
-  #_children = "";
-  #_version = "3.4";
-  #launch_data = "";
-  #comments = "";
-  #comments_from_lms = "";
-
-  student_data = null;
-
-  /**
-   * Constructor for the SCORM 1.2 cmi object
-   * @param {string} cmi_children
-   * @param {(CMIStudentData|AICCCMIStudentData)} student_data
-   * @param {boolean} initialized
-   */
-  constructor(cmi_children, student_data, initialized) {
-    super();
-
-    if (initialized) this.initialize();
-
-    this.#_children = cmi_children
-      ? cmi_children
-      : scorm12_constants.cmi_children;
-    this.core = new CMICore();
-    this.objectives = new CMIObjectives();
-    this.student_data = student_data ? student_data : new CMIStudentData();
-    this.student_preference = new CMIStudentPreference();
-    this.interactions = new CMIInteractions();
-  }
-
-  /**
-   * Called when the API has been initialized after the CMI has been created
-   */
-  initialize() {
-    super.initialize();
-    this.core?.initialize();
-    this.objectives?.initialize();
-    this.student_data?.initialize();
-    this.student_preference?.initialize();
-    this.interactions?.initialize();
-  }
-
-  /**
-   * toJSON for cmi
-   *
-   * @return {
-   *    {
-   *      suspend_data,
-   *      launch_data,
-   *      comments,
-   *      comments_from_lms,
-   *      core: CMICore,
-   *      objectives: CMIObjectives,
-   *      student_data: CMIStudentData,
-   *      student_preference: CMIStudentPreference,
-   *      interactions: CMIInteractions
-   *    }
-   *  }
-   */
-  toJSON() {
-    this.jsonString = true;
-    const result = {
-      suspend_data: this.suspend_data,
-      launch_data: this.launch_data,
-      comments: this.comments,
-      comments_from_lms: this.comments_from_lms,
-      core: this.core,
-      objectives: this.objectives,
-      student_data: this.student_data,
-      student_preference: this.student_preference,
-      interactions: this.interactions,
-    };
-    delete this.jsonString;
-    return result;
-  }
-
-  /**
-   * Getter for #_version
-   * @return {string}
-   */
-  get _version() {
-    return this.#_version;
-  }
-
-  /**
-   * Setter for #_version. Just throws an error.
-   * @param {string} _version
-   */
-  set _version(_version) {
-    throwInvalidValueError();
-  }
-
-  /**
-   * Getter for #_children
-   * @return {string}
-   */
-  get _children() {
-    return this.#_children;
-  }
-
-  /**
-   * Setter for #_version. Just throws an error.
-   * @param {string} _children
-   */
-  set _children(_children) {
-    throwInvalidValueError();
-  }
-
-  /**
-   * Getter for #suspend_data
-   * @return {string}
-   */
-  get suspend_data() {
-    return this.core?.suspend_data;
-  }
-
-  /**
-   * Setter for #suspend_data
-   * @param {string} suspend_data
-   */
-  set suspend_data(suspend_data) {
-    if (this.core) {
-      this.core.suspend_data = suspend_data;
-    }
-  }
-
-  /**
-   * Getter for #launch_data
-   * @return {string}
-   */
-  get launch_data() {
-    return this.#launch_data;
-  }
-
-  /**
-   * Setter for #launch_data. Can only be called before  initialization.
-   * @param {string} launch_data
-   */
-  set launch_data(launch_data) {
-    !this.initialized
-      ? (this.#launch_data = launch_data)
-      : throwReadOnlyError();
-  }
-
-  /**
-   * Getter for #comments
-   * @return {string}
-   */
-  get comments() {
-    return this.#comments;
-  }
-
-  /**
-   * Setter for #comments
-   * @param {string} comments
-   */
-  set comments(comments) {
-    if (check12ValidFormat(comments, scorm12_regex.CMIString4096, true)) {
-      this.#comments = comments;
-    }
-  }
-
-  /**
-   * Getter for #comments_from_lms
-   * @return {string}
-   */
-  get comments_from_lms() {
-    return this.#comments_from_lms;
-  }
-
-  /**
-   * Setter for #comments_from_lms. Can only be called before  initialization.
-   * @param {string} comments_from_lms
-   */
-  set comments_from_lms(comments_from_lms) {
-    !this.initialized
-      ? (this.#comments_from_lms = comments_from_lms)
-      : throwReadOnlyError();
-  }
-
-  /**
-   * Adds the current session time to the existing total time.
-   *
-   * @return {string}
-   */
-  getCurrentTotalTime() {
-    return this.core.getCurrentTotalTime(this.start_time);
-  }
-}
-
-/**
  * Class representing the cmi.core object
  * @extends BaseCMI
  */
@@ -295,17 +99,28 @@ class CMICore extends BaseCMI {
   }
 
   #_children = scorm12_constants.core_children;
-  #student_id = "";
-  #student_name = "";
-  #lesson_location = "";
-  #credit = "";
-  #lesson_status = "not attempted";
-  #entry = "";
-  #total_time = "";
-  #lesson_mode = "normal";
-  #exit = "";
-  #session_time = "00:00:00";
-  #suspend_data = "";
+
+  #student_id = '';
+
+  #student_name = '';
+
+  #lesson_location = '';
+
+  #credit = '';
+
+  #lesson_status = 'not attempted';
+
+  #entry = '';
+
+  #total_time = '';
+
+  #lesson_mode = 'normal';
+
+  #exit = '';
+
+  #session_time = '00:00:00';
+
+  #suspend_data = '';
 
   /**
    * Getter for #_children
@@ -354,9 +169,7 @@ class CMICore extends BaseCMI {
    * @param {string} student_name
    */
   set student_name(student_name) {
-    !this.initialized
-      ? (this.#student_name = student_name)
-      : throwReadOnlyError();
+    !this.initialized ? (this.#student_name = student_name) : throwReadOnlyError();
   }
 
   /**
@@ -410,10 +223,8 @@ class CMICore extends BaseCMI {
       if (check12ValidFormat(lesson_status, scorm12_regex.CMIStatus)) {
         this.#lesson_status = lesson_status;
       }
-    } else {
-      if (check12ValidFormat(lesson_status, scorm12_regex.CMIStatus2)) {
-        this.#lesson_status = lesson_status;
-      }
+    } else if (check12ValidFormat(lesson_status, scorm12_regex.CMIStatus2)) {
+      this.#lesson_status = lesson_status;
     }
   }
 
@@ -462,9 +273,7 @@ class CMICore extends BaseCMI {
    * @param {string} lesson_mode
    */
   set lesson_mode(lesson_mode) {
-    !this.initialized
-      ? (this.#lesson_mode = lesson_mode)
-      : throwReadOnlyError();
+    !this.initialized ? (this.#lesson_mode = lesson_mode) : throwReadOnlyError();
   }
 
   /**
@@ -530,12 +339,12 @@ class CMICore extends BaseCMI {
     let sessionTime = this.#session_time;
     const startTime = start_time;
 
-    if (typeof startTime !== "undefined" && startTime !== null) {
+    if (typeof startTime !== 'undefined' && startTime !== null) {
       const seconds = new Date().getTime() - startTime;
-      sessionTime = Util.getSecondsAsHHMMSS(seconds / 1000);
+      sessionTime = Utis.getSecondsAsHHMMSS(seconds / 1000);
     }
 
-    return Utilities.addHHMMSSTimeStrings(
+    return Utis.addHHMMSSTimeStrings(
       this.#total_time,
       sessionTime,
       new RegExp(scorm12_regex.CMITimespan)
@@ -602,9 +411,12 @@ class CMIObjectives extends CMIArray {
  */
 export class CMIStudentData extends BaseCMI {
   #_children;
-  #mastery_score = "";
-  #max_time_allowed = "";
-  #time_limit_action = "";
+
+  #mastery_score = '';
+
+  #max_time_allowed = '';
+
+  #time_limit_action = '';
 
   /**
    * Constructor for cmi.student_data
@@ -613,9 +425,7 @@ export class CMIStudentData extends BaseCMI {
   constructor(student_data_children) {
     super();
 
-    this.#_children = student_data_children
-      ? student_data_children
-      : scorm12_constants.student_data_children;
+    this.#_children = student_data_children || scorm12_constants.student_data_children;
   }
 
   /**
@@ -649,9 +459,7 @@ export class CMIStudentData extends BaseCMI {
    * @param {string} mastery_score
    */
   set mastery_score(mastery_score) {
-    !this.initialized
-      ? (this.#mastery_score = mastery_score)
-      : throwReadOnlyError();
+    !this.initialized ? (this.#mastery_score = mastery_score) : throwReadOnlyError();
   }
 
   /**
@@ -667,9 +475,7 @@ export class CMIStudentData extends BaseCMI {
    * @param {string} max_time_allowed
    */
   set max_time_allowed(max_time_allowed) {
-    !this.initialized
-      ? (this.#max_time_allowed = max_time_allowed)
-      : throwReadOnlyError();
+    !this.initialized ? (this.#max_time_allowed = max_time_allowed) : throwReadOnlyError();
   }
 
   /**
@@ -685,9 +491,7 @@ export class CMIStudentData extends BaseCMI {
    * @param {string} time_limit_action
    */
   set time_limit_action(time_limit_action) {
-    !this.initialized
-      ? (this.#time_limit_action = time_limit_action)
-      : throwReadOnlyError();
+    !this.initialized ? (this.#time_limit_action = time_limit_action) : throwReadOnlyError();
   }
 
   /**
@@ -727,15 +531,16 @@ export class CMIStudentPreference extends BaseCMI {
   constructor(student_preference_children) {
     super();
 
-    this.#_children = student_preference_children
-      ? student_preference_children
-      : scorm12_constants.student_preference_children;
+    this.#_children = student_preference_children || scorm12_constants.student_preference_children;
   }
 
-  #audio = "";
-  #language = "";
-  #speed = "";
-  #text = "";
+  #audio = '';
+
+  #language = '';
+
+  #speed = '';
+
+  #text = '';
 
   /**
    * Getter for #_children
@@ -910,13 +715,19 @@ export class CMIInteractionsObject extends BaseCMI {
     this.correct_responses?.initialize();
   }
 
-  #id = "";
-  #time = "";
-  #type = "";
-  #weighting = "";
-  #student_response = "";
-  #result = "";
-  #latency = "";
+  #id = '';
+
+  #time = '';
+
+  #type = '';
+
+  #weighting = '';
+
+  #student_response = '';
+
+  #result = '';
+
+  #latency = '';
 
   /**
    * Getter for #id. Should only be called during JSON export.
@@ -1103,8 +914,9 @@ export class CMIObjectivesObject extends BaseCMI {
     });
   }
 
-  #id = "";
-  #status = "";
+  #id = '';
+
+  #status = '';
 
   /**
    * Getter for #id
@@ -1176,7 +988,7 @@ export class CMIInteractionsObjectivesObject extends BaseCMI {
     super();
   }
 
-  #id = "";
+  #id = '';
 
   /**
    * Getter for #id
@@ -1226,7 +1038,7 @@ export class CMIInteractionsCorrectResponsesObject extends BaseCMI {
     super();
   }
 
-  #pattern = "";
+  #pattern = '';
 
   /**
    * Getter for #pattern
@@ -1275,7 +1087,7 @@ export class NAV extends BaseCMI {
     super();
   }
 
-  #event = "";
+  #event = '';
 
   /**
    * Getter for #event
@@ -1310,5 +1122,196 @@ export class NAV extends BaseCMI {
     };
     delete this.jsonString;
     return result;
+  }
+}
+
+/**
+ * Class representing the cmi object for SCORM 1.2
+ */
+export class CMI extends BaseCMI {
+  #_children = '';
+
+  #_version = '3.4';
+
+  #launch_data = '';
+
+  #comments = '';
+
+  #comments_from_lms = '';
+
+  student_data = null;
+
+  /**
+   * Constructor for the SCORM 1.2 cmi object
+   * @param {string} cmi_children
+   * @param {(CMIStudentData|AICCCMIStudentData)} student_data
+   * @param {boolean} initialized
+   */
+  constructor(cmi_children, student_data, initialized) {
+    super();
+
+    if (initialized) this.initialize();
+
+    this.#_children = cmi_children || scorm12_constants.cmi_children;
+    this.core = new CMICore();
+    this.objectives = new CMIObjectives();
+    this.student_data = student_data || new CMIStudentData();
+    this.student_preference = new CMIStudentPreference();
+    this.interactions = new CMIInteractions();
+  }
+
+  /**
+   * Called when the API has been initialized after the CMI has been created
+   */
+  initialize() {
+    super.initialize();
+    this.core?.initialize();
+    this.objectives?.initialize();
+    this.student_data?.initialize();
+    this.student_preference?.initialize();
+    this.interactions?.initialize();
+  }
+
+  /**
+   * toJSON for cmi
+   *
+   * @return {
+   *    {
+   *      suspend_data,
+   *      launch_data,
+   *      comments,
+   *      comments_from_lms,
+   *      core: CMICore,
+   *      objectives: CMIObjectives,
+   *      student_data: CMIStudentData,
+   *      student_preference: CMIStudentPreference,
+   *      interactions: CMIInteractions
+   *    }
+   *  }
+   */
+  toJSON() {
+    this.jsonString = true;
+    const result = {
+      suspend_data: this.suspend_data,
+      launch_data: this.launch_data,
+      comments: this.comments,
+      comments_from_lms: this.comments_from_lms,
+      core: this.core,
+      objectives: this.objectives,
+      student_data: this.student_data,
+      student_preference: this.student_preference,
+      interactions: this.interactions,
+    };
+    delete this.jsonString;
+    return result;
+  }
+
+  /**
+   * Getter for #_version
+   * @return {string}
+   */
+  get _version() {
+    return this.#_version;
+  }
+
+  /**
+   * Setter for #_version. Just throws an error.
+   * @param {string} _version
+   */
+  set _version(_version) {
+    throwInvalidValueError();
+  }
+
+  /**
+   * Getter for #_children
+   * @return {string}
+   */
+  get _children() {
+    return this.#_children;
+  }
+
+  /**
+   * Setter for #_version. Just throws an error.
+   * @param {string} _children
+   */
+  set _children(_children) {
+    throwInvalidValueError();
+  }
+
+  /**
+   * Getter for #suspend_data
+   * @return {string}
+   */
+  get suspend_data() {
+    return this.core?.suspend_data;
+  }
+
+  /**
+   * Setter for #suspend_data
+   * @param {string} suspend_data
+   */
+  set suspend_data(suspend_data) {
+    if (this.core) {
+      this.core.suspend_data = suspend_data;
+    }
+  }
+
+  /**
+   * Getter for #launch_data
+   * @return {string}
+   */
+  get launch_data() {
+    return this.#launch_data;
+  }
+
+  /**
+   * Setter for #launch_data. Can only be called before  initialization.
+   * @param {string} launch_data
+   */
+  set launch_data(launch_data) {
+    !this.initialized ? (this.#launch_data = launch_data) : throwReadOnlyError();
+  }
+
+  /**
+   * Getter for #comments
+   * @return {string}
+   */
+  get comments() {
+    return this.#comments;
+  }
+
+  /**
+   * Setter for #comments
+   * @param {string} comments
+   */
+  set comments(comments) {
+    if (check12ValidFormat(comments, scorm12_regex.CMIString4096, true)) {
+      this.#comments = comments;
+    }
+  }
+
+  /**
+   * Getter for #comments_from_lms
+   * @return {string}
+   */
+  get comments_from_lms() {
+    return this.#comments_from_lms;
+  }
+
+  /**
+   * Setter for #comments_from_lms. Can only be called before  initialization.
+   * @param {string} comments_from_lms
+   */
+  set comments_from_lms(comments_from_lms) {
+    !this.initialized ? (this.#comments_from_lms = comments_from_lms) : throwReadOnlyError();
+  }
+
+  /**
+   * Adds the current session time to the existing total time.
+   *
+   * @return {string}
+   */
+  getCurrentTotalTime() {
+    return this.core.getCurrentTotalTime(this.start_time);
   }
 }

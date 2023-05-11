@@ -112,6 +112,18 @@ const assignableRoles = [
   },
 ];
 
+const supportedVersions = {
+  AICC: {
+    label: 'AICC',
+    value: 'aicc',
+  },
+  SCORM12: {
+    label: 'SCORM 1.2',
+    value: 'scorm12',
+  },
+  SCORM2004: { label: 'SCORM 2004', value: 'scorm2004' },
+};
+
 module.exports = {
   pluginName: permissionsPrefix,
   permissions: {
@@ -120,4 +132,5 @@ module.exports = {
   },
   menuItems,
   assignableRoles,
+  supportedVersions,
 };

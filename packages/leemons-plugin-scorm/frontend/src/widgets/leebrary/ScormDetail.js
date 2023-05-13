@@ -9,6 +9,7 @@ import useRequestErrorMessage from '@common/useRequestErrorMessage';
 import { addErrorAlert, addSuccessAlert } from '@layout/alert';
 import { prefixPN } from '@scorm/helpers';
 import { deletePackageRequest, duplicatePackageRequest } from '@scorm/request';
+import { CardVariantIcon } from '@scorm/components/icons';
 
 const ScormDetail = ({ asset, onRefresh, ...props }) => {
   const history = useHistory();
@@ -97,6 +98,7 @@ const ScormDetail = ({ asset, onRefresh, ...props }) => {
       }}
       variant="document"
       variantTitle={t('document')}
+      variantIcon={CardVariantIcon}
       toolbarItems={toolbarItems}
       titleActionButton={
         asset?.providerData?.published

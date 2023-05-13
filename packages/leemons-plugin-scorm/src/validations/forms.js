@@ -60,4 +60,5 @@ function validateSavePackage(data) {
 
 module.exports = {
   validateSavePackage,
+  savePackageSchema,
 };

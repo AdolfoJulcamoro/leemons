@@ -14,6 +14,7 @@ const ListPageStyles = createStyles((theme) => ({
   tabPane: {
     display: 'flex',
     flex: 1,
+    height: '100%',
     paddingTop: theme.spacing[5],
     paddingBottom: theme.spacing[5],
   },

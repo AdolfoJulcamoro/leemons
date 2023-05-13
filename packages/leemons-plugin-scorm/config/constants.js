@@ -86,8 +86,8 @@ const assignableRoles = [
       creatable: true,
       createUrl: '/private/scorm/new',
       canUse: [], // Assignables le calza 'calledFrom ('plugins.tasks')' y 'plugins.assignables'
-      pluralName: { en: 'contents', es: 'contenidos' },
-      singularName: { en: 'content', es: 'contenido' },
+      pluralName: { en: 'SCORM contents', es: 'contenidos SCORM' },
+      singularName: { en: 'SCORM content', es: 'contenido SCORM' },
       menu: {
         item: {
           iconSvg: '/public/scorm/menu-icon.svg',

@@ -1,11 +1,20 @@
 const _ = require('lodash');
-const { validateSavePackage } = require('../../validations/forms');
+const { validateSavePackage, savePackageSchema } = require('../../validations/forms');
 
-async function savePackage(data, { userSession, transacting } = {}) {
+async function savePackage(scormData, { userSession, transacting } = {}) {
+  const data = _.cloneDeep(scormData);
   const { assignables: assignableService } = leemons.getPlugin('assignables').services;
 
   // Check is userSession is provided
   if (!userSession) throw new Error('User session is required (savePackage)');
+
+  // Clean data
+  if (!savePackageSchema.additionalProperties) {
+    const allowedProps = Object.keys(savePackageSchema.properties);
+    Object.keys(data).forEach((key) => {
+      if (!allowedProps.includes(key)) delete data[key];
+    });
+  }
 
   validateSavePackage(data);
 
@@ -15,7 +24,7 @@ async function savePackage(data, { userSession, transacting } = {}) {
       tagline: data.tagline,
       description: data.description,
       color: data.color,
-      cover: data.cover,
+      cover: data.cover?.id ? data.cover.id : data.cover,
       tags: data.tags,
       indexable: true,
       public: true, // TODO Cambiar a false despues de la demo

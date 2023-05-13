@@ -10,6 +10,8 @@ const ScormList = loadable(() => pMinDelay(import('./src/pages/List'), 1000));
 const ScormDetail = loadable(() => pMinDelay(import('./src/pages/Detail'), 1000));
 const ScormAssign = loadable(() => pMinDelay(import('./src/pages/Assign'), 1000));
 const ScormView = loadable(() => pMinDelay(import('./src/pages/View'), 1000));
+const ScormResult = loadable(() => pMinDelay(import('./src/pages/Result'), 1000));
+const ScormPreview = loadable(() => pMinDelay(import('./src/pages/Preview'), 1000));
 
 export default function Private() {
   const { path } = useRouteMatch();
@@ -17,6 +19,12 @@ export default function Private() {
 
   return (
     <Switch>
+      <Route path={`${path}/preview/:id`}>
+        <ScormPreview session={session} fallback={<LoadingOverlay visible />} />
+      </Route>
+      <Route path={`${path}/result/:id`}>
+        <ScormResult session={session} fallback={<LoadingOverlay visible />} />
+      </Route>
       <Route path={`${path}/assign/:id`}>
         <ScormAssign session={session} fallback={<LoadingOverlay visible />} />
       </Route>

@@ -31,7 +31,7 @@ import {
 import { SetupContent, DocumentIcon } from '@scorm/components/icons';
 import { PageContent } from './components/PageContent/PageContent';
 
-export default function Index() {
+export default function Detail() {
   const [t, , , tLoading] = useTranslateLoader(prefixPN('scormSetup'));
   const [, translations] = useTranslateLoader('plugins.leebrary.assetSetup');
 
@@ -76,14 +76,10 @@ export default function Index() {
       store.isNew = params.id === 'new';
       render();
       if (!store.isNew) {
-        const {
-          // eslint-disable-next-line camelcase
-          scorm: { deleted, deleted_at, created_at, updated_at, asset, ...props },
-        } = await getPackageRequest(params.id);
-        // eslint-disable-next-line react/prop-types
-        store.titleValue = props.name;
-        store.package = { ...props };
-        form.reset({ ...asset, ...props });
+        const { scorm } = await getPackageRequest(params.id);
+        store.titleValue = scorm.name;
+        store.package = scorm;
+        form.reset({ ...scorm });
       }
 
       const { versions: supportedVersions } = await getSupportedVersionsRequest();
@@ -104,12 +100,12 @@ export default function Index() {
   // METHODS
 
   async function savePackage(published) {
-    const fileId = await uploadFileAsMultipart(formValues.file, {
+    const file = await uploadFileAsMultipart(formValues.file, {
       onProgress: (info) => {
         setUploadingFileInfo(info);
       },
     });
-
+    const fileId = file?.id ? file.id : file;
     setUploadingFileInfo(null);
 
     const dataToSave = {
@@ -120,6 +116,8 @@ export default function Index() {
       published,
     };
 
+    console.log('dataToSave:', dataToSave);
+
     const {
       package: { id },
     } = await savePackageRequest(dataToSave);
@@ -128,9 +126,9 @@ export default function Index() {
     store.idLoaded = id;
     store.isNew = false;
 
-    if (fileId !== formValues.file.id) {
+    if (file !== formValues.file.id) {
       form.setValue('file', {
-        id: fileId,
+        id: file,
         name: formValues.file.name,
         type: formValues.file.type,
       });
